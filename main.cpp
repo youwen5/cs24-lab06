@@ -65,7 +65,9 @@ static void loadCSV(const std::string &path, Movies &movies) {
     double rating{};
     std::from_chars(numBeg, eol, rating);
 
-    rows.emplace_back(std::move(title), rating);
+    int16_t raw{};
+    std::from_chars(numBeg, eol, raw);
+    rows.emplace_back(title, raw);
 
     // advance to the next line
     p = (eol < end && *eol == '\r') ? eol + 2 : eol + 1;
@@ -78,6 +80,11 @@ static void loadCSV(const std::string &path, Movies &movies) {
 }
 
 int main(int argc, char **argv) {
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(nullptr); // no need to flush on every <<
+  cout.setf(std::ios::fixed, std::ios::floatfield);
+  cout.precision(1);
+
   if (argc < 2) {
     cerr << "Not enough arguments provided (need at least 1 argument)." << endl;
     cerr << "Usage: " << argv[0] << " moviesFilename prefixFilename " << endl;
@@ -132,11 +139,13 @@ int main(int argc, char **argv) {
     }
 
     // sort by rating DESC, then name ASC
-    sort(vec.begin(), vec.end(), [](auto &a, auto &b) {
-      if (a.second != b.second)
-        return a.second > b.second;
-      return a.first < b.first;
-    });
+    if (vec.size() > 1) {
+      sort(vec.begin(), vec.end(), [](auto &a, auto &b) {
+        if (a.second != b.second)
+          return a.second > b.second;
+        return a.first < b.first;
+      });
+    }
 
     for (auto &[name, rating] : vec)
       cout << name << ", " << fixed << setprecision(1) << rating << '\n';
@@ -207,191 +216,212 @@ BENCHMARKS --- ran for each combination of files, with `hyperfine`.
 
 Summary
   ./runMovies "input_20_random.csv" "prefix_small.txt" ran
-    1.01 ± 0.26 times faster than ./runMovies "input_20_random.csv" "prefix_medium.txt"
-    1.02 ± 0.31 times faster than ./runMovies "input_20_ordered.csv" "prefix_small.txt"
-    1.03 ± 0.27 times faster than ./runMovies "input_100_ordered.csv" "prefix_small.txt"
-    1.04 ± 0.27 times faster than ./runMovies "input_100_ordered.csv" "prefix_medium.txt"
-    1.06 ± 0.32 times faster than ./runMovies "input_20_ordered.csv" "prefix_medium.txt"
-    1.08 ± 0.30 times faster than ./runMovies "input_100_random.csv" "prefix_medium.txt"
-    1.08 ± 0.33 times faster than ./runMovies "input_100_random.csv" "prefix_small.txt"
-    1.28 ± 0.31 times faster than ./runMovies "input_1000_ordered.csv" "prefix_small.txt"
-    1.38 ± 0.36 times faster than ./runMovies "input_1000_random.csv" "prefix_small.txt"
-    1.50 ± 0.34 times faster than ./runMovies "input_1000_ordered.csv" "prefix_medium.txt"
-    1.59 ± 0.39 times faster than ./runMovies "input_1000_random.csv" "prefix_medium.txt"
-    4.64 ± 0.92 times faster than ./runMovies "input_20_ordered.csv" "prefix_large.txt"
-    4.72 ± 0.94 times faster than ./runMovies "input_20_random.csv" "prefix_large.txt"
-    4.87 ± 0.94 times faster than ./runMovies "input_100_random.csv" "prefix_large.txt"
-    4.98 ± 1.00 times faster than ./runMovies "input_100_ordered.csv" "prefix_large.txt"
-    5.99 ± 1.15 times faster than ./runMovies "input_1000_random.csv" "prefix_large.txt"
-    6.02 ± 1.19 times faster than ./runMovies "input_1000_ordered.csv" "prefix_large.txt"
-   30.12 ± 5.73 times faster than ./runMovies "input_76920_ordered.csv" "prefix_small.txt"
-   37.06 ± 7.48 times faster than ./runMovies "input_76920_random.csv" "prefix_small.txt"
-   47.89 ± 8.91 times faster than ./runMovies "input_76920_ordered.csv" "prefix_medium.txt"
-   49.93 ± 9.35 times faster than ./runMovies "input_76920_ordered.csv" "prefix_large.txt"
-   56.04 ± 10.83 times faster than ./runMovies "input_76920_random.csv" "prefix_medium.txt"
-   56.58 ± 10.52 times faster than ./runMovies "input_76920_random.csv" "prefix_large.txt"
+    1.01 ± 0.26 times faster than ./runMovies "input_20_random.csv"
+"prefix_medium.txt" 1.02 ± 0.31 times faster than ./runMovies
+"input_20_ordered.csv" "prefix_small.txt" 1.03 ± 0.27 times faster than
+./runMovies "input_100_ordered.csv" "prefix_small.txt" 1.04 ± 0.27 times faster
+than ./runMovies "input_100_ordered.csv" "prefix_medium.txt" 1.06 ± 0.32 times
+faster than ./runMovies "input_20_ordered.csv" "prefix_medium.txt" 1.08 ± 0.30
+times faster than ./runMovies "input_100_random.csv" "prefix_medium.txt" 1.08 ±
+0.33 times faster than ./runMovies "input_100_random.csv" "prefix_small.txt"
+    1.28 ± 0.31 times faster than ./runMovies "input_1000_ordered.csv"
+"prefix_small.txt" 1.38 ± 0.36 times faster than ./runMovies
+"input_1000_random.csv" "prefix_small.txt" 1.50 ± 0.34 times faster than
+./runMovies "input_1000_ordered.csv" "prefix_medium.txt" 1.59 ± 0.39 times
+faster than ./runMovies "input_1000_random.csv" "prefix_medium.txt" 4.64 ± 0.92
+times faster than ./runMovies "input_20_ordered.csv" "prefix_large.txt" 4.72 ±
+0.94 times faster than ./runMovies "input_20_random.csv" "prefix_large.txt" 4.87
+± 0.94 times faster than ./runMovies "input_100_random.csv" "prefix_large.txt"
+    4.98 ± 1.00 times faster than ./runMovies "input_100_ordered.csv"
+"prefix_large.txt" 5.99 ± 1.15 times faster than ./runMovies
+"input_1000_random.csv" "prefix_large.txt" 6.02 ± 1.19 times faster than
+./runMovies "input_1000_ordered.csv" "prefix_large.txt" 30.12 ± 5.73 times
+faster than ./runMovies "input_76920_ordered.csv" "prefix_small.txt" 37.06
+± 7.48 times faster than ./runMovies "input_76920_random.csv" "prefix_small.txt"
+   47.89 ± 8.91 times faster than ./runMovies "input_76920_ordered.csv"
+"prefix_medium.txt" 49.93 ± 9.35 times faster than ./runMovies
+"input_76920_ordered.csv" "prefix_large.txt" 56.04 ± 10.83 times faster than
+./runMovies "input_76920_random.csv" "prefix_medium.txt" 56.58 ± 10.52 times
+faster than ./runMovies "input_76920_random.csv" "prefix_large.txt"
 
 Benchmark 1: ./runMovies "input_20_random.csv" "prefix_small.txt"
   Time (mean ± σ):       1.1 ms ±   0.2 ms    [User: 0.5 ms, System: 0.8 ms]
   Range (min … max):     0.7 ms …   2.0 ms    921 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 2: ./runMovies "input_20_ordered.csv" "prefix_small.txt"
   Time (mean ± σ):       1.2 ms ±   0.3 ms    [User: 0.6 ms, System: 0.8 ms]
   Range (min … max):     0.6 ms …   2.8 ms    930 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 3: ./runMovies "input_100_random.csv" "prefix_small.txt"
   Time (mean ± σ):       1.2 ms ±   0.3 ms    [User: 0.6 ms, System: 0.8 ms]
   Range (min … max):     0.7 ms …   3.0 ms    997 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 4: ./runMovies "input_100_ordered.csv" "prefix_small.txt"
   Time (mean ± σ):       1.2 ms ±   0.2 ms    [User: 0.5 ms, System: 0.8 ms]
   Range (min … max):     0.6 ms …   2.0 ms    966 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 5: ./runMovies "input_1000_random.csv" "prefix_small.txt"
   Time (mean ± σ):       1.6 ms ±   0.3 ms    [User: 0.8 ms, System: 0.8 ms]
   Range (min … max):     1.0 ms …   3.1 ms    806 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 6: ./runMovies "input_1000_ordered.csv" "prefix_small.txt"
   Time (mean ± σ):       1.5 ms ±   0.2 ms    [User: 0.8 ms, System: 0.8 ms]
   Range (min … max):     0.9 ms …   2.8 ms    935 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 7: ./runMovies "input_76920_random.csv" "prefix_small.txt"
   Time (mean ± σ):      42.5 ms ±   3.4 ms    [User: 32.2 ms, System: 9.5 ms]
   Range (min … max):    38.9 ms …  60.2 ms    65 runs
- 
-  Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interfer
-ences from other programs. It might help to use the '--warmup' or '--prepare' options.
- 
+
+  Warning: Statistical outliers were detected. Consider re-running this
+benchmark on a quiet system without any interfer ences from other programs. It
+might help to use the '--warmup' or '--prepare' options.
+
 Benchmark 8: ./runMovies "input_76920_ordered.csv" "prefix_small.txt"
   Time (mean ± σ):      34.5 ms ±   1.5 ms    [User: 24.1 ms, System: 9.8 ms]
   Range (min … max):    32.8 ms …  41.5 ms    83 runs
- 
+
 Benchmark 9: ./runMovies "input_20_random.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.2 ms ±   0.2 ms    [User: 0.5 ms, System: 0.8 ms]
   Range (min … max):     0.6 ms …   1.9 ms    854 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 10: ./runMovies "input_20_ordered.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.2 ms ±   0.3 ms    [User: 0.6 ms, System: 0.8 ms]
   Range (min … max):     0.7 ms …   3.4 ms    941 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
-  Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interfer
-ences from other programs. It might help to use the '--warmup' or '--prepare' options.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely. Warning: Statistical outliers were detected.
+Consider re-running this benchmark on a quiet system without any interfer ences
+from other programs. It might help to use the '--warmup' or '--prepare' options.
+
 Benchmark 11: ./runMovies "input_100_random.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.2 ms ±   0.3 ms    [User: 0.6 ms, System: 0.8 ms]
   Range (min … max):     0.7 ms …   2.5 ms    1084 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 12: ./runMovies "input_100_ordered.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.2 ms ±   0.2 ms    [User: 0.6 ms, System: 0.8 ms]
   Range (min … max):     0.7 ms …   2.9 ms    717 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 13: ./runMovies "input_1000_random.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.8 ms ±   0.3 ms    [User: 1.0 ms, System: 0.9 ms]
   Range (min … max):     1.2 ms …   3.3 ms    757 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 14: ./runMovies "input_1000_ordered.csv" "prefix_medium.txt"
   Time (mean ± σ):       1.7 ms ±   0.2 ms    [User: 1.0 ms, System: 0.8 ms]
   Range (min … max):     1.2 ms …   2.7 ms    786 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 15: ./runMovies "input_76920_random.csv" "prefix_medium.txt"
   Time (mean ± σ):      64.2 ms ±   3.6 ms    [User: 52.6 ms, System: 10.5 ms]
   Range (min … max):    60.2 ms …  78.0 ms    44 runs
- 
+
 Benchmark 16: ./runMovies "input_76920_ordered.csv" "prefix_medium.txt"
   Time (mean ± σ):      54.9 ms ±   1.0 ms    [User: 43.9 ms, System: 10.0 ms]
   Range (min … max):    52.6 ms …  57.0 ms    52 runs
- 
+
 Benchmark 17: ./runMovies "input_20_random.csv" "prefix_large.txt"
   Time (mean ± σ):       5.4 ms ±   0.4 ms    [User: 3.6 ms, System: 1.7 ms]
   Range (min … max):     4.6 ms …   7.3 ms    395 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 18: ./runMovies "input_20_ordered.csv" "prefix_large.txt"
   Time (mean ± σ):       5.3 ms ±   0.4 ms    [User: 3.6 ms, System: 1.7 ms]
   Range (min … max):     4.5 ms …   7.2 ms    409 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 19: ./runMovies "input_100_random.csv" "prefix_large.txt"
   Time (mean ± σ):       5.6 ms ±   0.3 ms    [User: 4.0 ms, System: 1.6 ms]
   Range (min … max):     4.8 ms …   6.8 ms    357 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 20: ./runMovies "input_100_ordered.csv" "prefix_large.txt"
   Time (mean ± σ):       5.7 ms ±   0.4 ms    [User: 3.9 ms, System: 1.7 ms]
   Range (min … max):     4.8 ms …   8.2 ms    381 runs
- 
-  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not 
-calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to
- disable the shell completely.
- 
+
+  Warning: Command took less than 5 ms to complete. Note that the results might
+be inaccurate because hyperfine can not calibrate the shell startup time much
+more precise than this limit. You can try to use the `-N`/`--shell=none` option
+to disable the shell completely.
+
 Benchmark 21: ./runMovies "input_1000_random.csv" "prefix_large.txt"
   Time (mean ± σ):       6.9 ms ±   0.3 ms    [User: 5.0 ms, System: 1.8 ms]
   Range (min … max):     6.1 ms …   7.9 ms    328 runs
- 
+
 Benchmark 22: ./runMovies "input_1000_ordered.csv" "prefix_large.txt"
   Time (mean ± σ):       6.9 ms ±   0.5 ms    [User: 5.0 ms, System: 1.8 ms]
   Range (min … max):     6.1 ms …   8.9 ms    341 runs
- 
+
 Benchmark 23: ./runMovies "input_76920_random.csv" "prefix_large.txt"
   Time (mean ± σ):      64.8 ms ±   1.1 ms    [User: 53.4 ms, System: 10.4 ms]
   Range (min … max):    62.9 ms …  67.1 ms    45 runs
- 
+
 Benchmark 24: ./runMovies "input_76920_ordered.csv" "prefix_large.txt"
   Time (mean ± σ):      57.2 ms ±   1.6 ms    [User: 45.1 ms, System: 11.2 ms]
   Range (min … max):    55.4 ms …  63.1 ms    51 runs
