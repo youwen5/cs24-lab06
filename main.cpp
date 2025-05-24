@@ -76,9 +76,9 @@ int main(int argc, char **argv) {
       return a.first < b.first;
     });
 
-    cout << '\n';
     for (auto &[name, rating] : vec)
-      cout << name << ", " << fixed << setprecision(1) << rating << '\n';
+      cout << name << ", " << fixed << setprecision(1) << rating << '\n'
+           << '\n';
 
     best.emplace_back(pref, vec.front()); // store for later summary
   }
@@ -117,7 +117,7 @@ Total per prefix                        O(log n + k log k)
 
 All m prefixes                          O(m * log n + sum k_i log k_i)
 In the worst case k_i <= k and sum k_i <= n.
-So an upper bound                      **O(m·log n + n log k)**.
+So an upper bound                      $O(m·log n + n log k)$.
 
 Space :  map stores each movie once -> O(n)
 
