@@ -78,6 +78,10 @@ static void loadCSV(const std::string &path, Movies &movies) {
 }
 
 int main(int argc, char **argv) {
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+  cout.setf(std::ios::fixed, std::ios::floatfield);
+  cout.precision(1);
   if (argc < 2) {
     cerr << "Not enough arguments provided (need at least 1 argument)." << endl;
     cerr << "Usage: " << argv[0] << " moviesFilename prefixFilename " << endl;
