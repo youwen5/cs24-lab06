@@ -10,12 +10,13 @@ auto Movies::allWithPrefix(const std::string &p) const
     -> std::vector<std::pair<std::string, double>> {
   auto lo = byName.lower_bound(p);
 
-  std::string hi(p);
-  hi.push_back('\xFF'); // strictly greater than any legal ASCII
+  // bump last character to the next possible char to form an exclusive upper
+  // bound
+  std::string hi = p;
+  hi.back()++; // safe because names are ASCII only
   auto up = byName.lower_bound(hi);
 
   std::vector<std::pair<std::string, double>> out;
-  out.reserve(std::distance(lo, up)); // saves one alloc in the loop
   for (auto it = lo; it != up; ++it)
     out.push_back(*it);
   return out;
