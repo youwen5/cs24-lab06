@@ -30,7 +30,7 @@ static void loadCSV(const std::string &path, Movies &movies) {
 
   // parse in-place without alloc
   std::vector<std::pair<std::string, double>> rows;
-  rows.reserve(70'000); // alloc is expensive!
+  // rows.reserve(70'000); // alloc is expensive!
 
   const char *p = buffer.data();
   const char *end = p + buffer.size();
