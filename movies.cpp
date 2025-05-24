@@ -1,23 +1,23 @@
 #include "movies.h"
 
-void Movies::insert(const std::string &name, double rating) {
-  byName.insert({name, rating}); // duplicates?  keep the first
-}
+std::vector<const Movie *> Movies::allWithPrefix(const std::string &p) const {
+  // lower bound for the prefix
+  auto lo = std::lower_bound(data.begin(), data.end(), p,
+                             [](const Movie &m, const std::string &pref) {
+                               return m.name.compare(0, pref.size(), pref) < 0;
+                             });
 
-std::map<std::string, double> &Movies::getRaw() { return byName; }
-
-auto Movies::allWithPrefix(const std::string &p) const
-    -> std::vector<std::pair<std::string, double>> {
-  auto lo = byName.lower_bound(p);
-
-  // bump last character to the next possible char to form an exclusive upper
-  // bound
+  // exclusive upper bound – append char 255 (highest char) to prefix
   std::string hi = p;
-  hi.back()++; // safe because names are ASCII only
-  auto up = byName.lower_bound(hi);
+  hi.push_back(char(0xFF));
 
-  std::vector<std::pair<std::string, double>> out;
+  auto up = std::lower_bound(
+      lo, data.end(), hi,
+      [](const Movie &m, const std::string &pref) { return m.name < pref; });
+
+  std::vector<const Movie *> out;
+  out.reserve(std::distance(lo, up));
   for (auto it = lo; it != up; ++it)
-    out.push_back(*it);
+    out.push_back(&*it);
   return out;
 }
