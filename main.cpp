@@ -61,6 +61,8 @@ int main(int argc, char **argv) {
 
   vector<pair<string, pair<string, double>>> best;
 
+  cout << endl;
+
   for (const auto &pref : prefixes) {
     auto vec = movies.allWithPrefix(pref);
 
