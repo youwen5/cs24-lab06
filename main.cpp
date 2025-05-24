@@ -67,6 +67,8 @@ int main(int argc, char **argv) {
     if (vec.empty()) {
       cout << "No movies found with prefix " << pref << '\n';
       continue;
+    } else {
+      cout << '\n';
     }
 
     // sort by rating DESC, then name ASC
@@ -78,7 +80,6 @@ int main(int argc, char **argv) {
 
     for (auto &[name, rating] : vec)
       cout << name << ", " << fixed << setprecision(1) << rating << '\n';
-    cout << '\n';
 
     best.emplace_back(pref, vec.front()); // store for later summary
   }
