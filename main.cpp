@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
   movieFile.close();
 
   if (argc == 2) {
-    for (auto &[name, rating] : movies.getRawVec()) // empty prefix -> whole map
+    for (auto &[name, rating] : movies.getRawVec())
       cout << name << ", " << fixed << setprecision(1) << rating << '\n';
     return 0;
   }
@@ -121,8 +121,6 @@ int main(int argc, char **argv) {
 
   std::vector<std::pair<std::string, const Movie *>> best;
 
-  bool lastWasNotFound = false;
-
   for (const std::string &pref : prefixes) {
     auto matches = movies.allWithPrefix(pref);
 
@@ -142,6 +140,7 @@ int main(int argc, char **argv) {
       cout << m->name << ", " << fixed << setprecision(1) << m->rating << '\n';
 
     best.emplace_back(pref, matches.front());
+    cout << '\n';
   }
 
   for (auto &[pref, bm] : best)
