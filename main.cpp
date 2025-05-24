@@ -61,8 +61,6 @@ int main(int argc, char **argv) {
 
   vector<pair<string, pair<string, double>>> best;
 
-  cout << endl;
-
   for (const auto &pref : prefixes) {
     auto vec = movies.allWithPrefix(pref);
 
@@ -78,6 +76,7 @@ int main(int argc, char **argv) {
       return a.first < b.first;
     });
 
+    cout << '\n';
     for (auto &[name, rating] : vec)
       cout << name << ", " << fixed << setprecision(1) << rating << '\n';
 
