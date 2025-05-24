@@ -15,7 +15,8 @@ using namespace std;
 
 #include "movies.h"
 
-// optimized CSV reader, saves 20ms overall
+// optimized CSV reader, saves 20ms overall, by making hardcoded assumptions
+// about the csv
 static void loadCSV(const std::string &path, Movies &movies) {
   // read entire file into memory
   std::ifstream f(path, std::ios::binary | std::ios::ate);
@@ -29,36 +30,47 @@ static void loadCSV(const std::string &path, Movies &movies) {
 
   // parse in-place without alloc
   std::vector<std::pair<std::string, double>> rows;
-  rows.reserve(70'000); // space is cheap!
+  rows.reserve(70'000); // alloc is expensive!
 
   const char *p = buffer.data();
   const char *end = p + buffer.size();
 
   while (p < end) {
     const char *line = p;
-    const char *comma = line;
-    while (*comma != ',' && comma < end)
-      ++comma;
+    const char *lastComma = nullptr;
 
-    const char *eol = comma;
-    while (eol < end && *eol != '\n' && *eol != '\r')
-      ++eol;
+    // single scan: remember where the last comma was
+    const char *cur = line;
+    while (cur < end && *cur != '\n' && *cur != '\r') {
+      if (*cur == ',')
+        lastComma = cur;
+      ++cur;
+    }
+    const char *eol = cur; // cur now points at '\n', '\r', or end
 
-    // title (strip a leading/ending quote, if any)
+    if (!lastComma)
+      throw std::runtime_error("malformed csv line (no comma found)");
+
+    // title (strip surrounding quotes if they exist)
     const char *nameBeg = (*line == '"') ? line + 1 : line;
-    const char *nameEnd = (*line == '"') ? comma - 1 : comma;
+    const char *nameEnd =
+        (*line == '"' && lastComma > line) ? lastComma - 1 : lastComma;
     std::string title(nameBeg, nameEnd);
 
+    // rating – skip any spaces after the comma
+    const char *numBeg = lastComma + 1;
+    while (numBeg < eol && *numBeg == ' ')
+      ++numBeg;
+
     double rating{};
-    std::from_chars(comma + 1, eol, rating);
+    std::from_chars(numBeg, eol, rating);
 
     rows.emplace_back(std::move(title), rating);
 
-    // cursed hack
+    // advance to the next line
     p = (eol < end && *eol == '\r') ? eol + 2 : eol + 1;
   }
 
-  // cheese the map
   std::sort(rows.begin(), rows.end(),
             [](auto &a, auto &b) { return a.first < b.first; });
 
