@@ -61,14 +61,25 @@ int main(int argc, char **argv) {
 
   vector<pair<string, pair<string, double>>> best;
 
+  bool state = true;
+  bool lastWasNotFound = false;
+
   for (const auto &pref : prefixes) {
     auto vec = movies.allWithPrefix(pref);
 
     if (vec.empty()) {
+      if (state) {
+        cout << '\n';
+        state = false;
+      }
       cout << "No movies found with prefix " << pref << '\n';
+      lastWasNotFound = true;
       continue;
+    } else if (!state) {
+      state = true;
+      lastWasNotFound = true;
     } else {
-      cout << '\n';
+      lastWasNotFound = false;
     }
 
     // sort by rating DESC, then name ASC
@@ -84,6 +95,9 @@ int main(int argc, char **argv) {
     best.emplace_back(pref, vec.front()); // store for later summary
   }
 
+  if (!lastWasNotFound) {
+    cout << '\n';
+  }
   for (auto &[pref, bestPair] : best)
     cout << "Best movie with prefix " << pref << " is: " << bestPair.first
          << " with rating " << fixed << setprecision(1) << bestPair.second
