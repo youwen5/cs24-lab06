@@ -29,8 +29,7 @@ static void loadCSV(const std::string &path, Movies &movies) {
   f.read(buffer.data(), len);
 
   // parse in-place
-  std::vector<std::pair<std::string, double>> rows;
-  rows.reserve(80'000); // alloc is expensive!
+  movies.reserve(80'000); // alloc is expensive!
 
   const char *p = buffer.data();
   const char *end = p + buffer.size();
@@ -65,18 +64,11 @@ static void loadCSV(const std::string &path, Movies &movies) {
     double rating{};
     std::from_chars(numBeg, eol, rating);
 
-    rows.emplace_back(std::move(title), rating);
-
+    movies.insert(std::move(title), rating);
     // advance to the next line
     p = (eol < end && *eol == '\r') ? eol + 2 : eol + 1;
   }
-
-  std::sort(rows.begin(), rows.end(),
-            [](auto &a, auto &b) { return a.first < b.first; });
-
-  for (auto i : rows) {
-    movies.insert(i.first, i.second);
-  }
+  movies.finalize();
 }
 
 int main(int argc, char **argv) {
