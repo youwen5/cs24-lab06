@@ -1,2 +1,4 @@
 runMovies
 *.o
+result
+.direnv
