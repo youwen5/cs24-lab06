@@ -77,8 +77,8 @@ int main(int argc, char **argv) {
     });
 
     for (auto &[name, rating] : vec)
-      cout << name << ", " << fixed << setprecision(1) << rating << '\n'
-           << '\n';
+      cout << name << ", " << fixed << setprecision(1) << rating << '\n';
+    cout << '\n';
 
     best.emplace_back(pref, vec.front()); // store for later summary
   }
